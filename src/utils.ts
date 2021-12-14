@@ -72,6 +72,10 @@ export async function writeDocx(
   return write(buffer);
 }
 
+export function writeToBuffer(doc: Document) {
+  return Packer.toBuffer(doc);
+}
+
 export function getLatexFromNode(node: ProsemirrorNode): string {
   let math = '';
   node.forEach((child) => {

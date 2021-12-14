@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLatexFromNode = exports.writeDocx = exports.createDocFromState = exports.createShortId = void 0;
+exports.getLatexFromNode = exports.writeToBuffer = exports.writeDocx = exports.createDocFromState = exports.createShortId = void 0;
 const docx_1 = require("docx");
 function createShortId() {
     return Math.random().toString(36).substr(2, 9);
@@ -63,6 +63,10 @@ function writeDocx(doc, write) {
     });
 }
 exports.writeDocx = writeDocx;
+function writeToBuffer(doc) {
+    return docx_1.Packer.toBuffer(doc);
+}
+exports.writeToBuffer = writeToBuffer;
 function getLatexFromNode(node) {
     let math = '';
     node.forEach((child) => {

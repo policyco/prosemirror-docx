@@ -11,4 +11,5 @@ export declare function createDocFromState(state: {
     options: Options;
 }): Document;
 export declare function writeDocx(doc: Document, write: ((buffer: Buffer) => void) | ((buffer: Buffer) => Promise<void>)): Promise<void>;
+export declare function writeToBuffer(doc: Document): Promise<Buffer>;
 export declare function getLatexFromNode(node: ProsemirrorNode): string;
