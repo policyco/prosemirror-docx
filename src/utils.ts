@@ -6,7 +6,7 @@ import {
   SectionType,
   Footer,
   Paragraph,
-  AlignmentType ,
+  AlignmentType,
   TextRun,
   PageNumber,
   TableOfContents,
@@ -22,10 +22,9 @@ export function createDocFromState(state: {
   numbering: INumberingOptions['config'];
   children: ISectionOptions['children'];
   footnotes?: IFootnotes;
-  options: Options
+  options: Options;
 }) {
-
-  const toc = new TableOfContents("Summary", {
+  const toc = new TableOfContents('Summary', {
     hyperlink: true,
   });
   const children = [toc].concat(state.children);
@@ -48,10 +47,11 @@ export function createDocFromState(state: {
                 children: [
                   new TextRun(state?.options?.footer || ''),
                   new TextRun({
-                    children: [" Page ", PageNumber.CURRENT],
+                    children: [' Page ', PageNumber.CURRENT],
                   }),
                 ],
-              })],
+              }),
+            ],
           }),
         },
         properties: {

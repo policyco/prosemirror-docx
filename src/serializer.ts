@@ -244,7 +244,7 @@ export class DocxSerializerState<S extends Schema = any> {
 
   image(src: string, widthPercent = 70, align: AlignOptions = 'center') {
     let getImageBuffer = this.defaultGetImageBuffer;
-    if(typeof this?.options?.getImageBuffer === 'function') {
+    if (typeof this?.options?.getImageBuffer === 'function') {
       getImageBuffer = this.options.getImageBuffer;
     }
     const buffer = getImageBuffer(src);

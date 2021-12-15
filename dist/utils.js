@@ -17,7 +17,7 @@ function createShortId() {
 exports.createShortId = createShortId;
 function createDocFromState(state) {
     var _a;
-    const toc = new docx_1.TableOfContents("Summary", {
+    const toc = new docx_1.TableOfContents('Summary', {
         hyperlink: true,
     });
     const children = [toc].concat(state.children);
@@ -39,10 +39,10 @@ function createDocFromState(state) {
                                 children: [
                                     new docx_1.TextRun(((_a = state === null || state === void 0 ? void 0 : state.options) === null || _a === void 0 ? void 0 : _a.footer) || ''),
                                     new docx_1.TextRun({
-                                        children: [" Page ", docx_1.PageNumber.CURRENT],
+                                        children: [' Page ', docx_1.PageNumber.CURRENT],
                                     }),
                                 ],
-                            })
+                            }),
                         ],
                     }),
                 },
