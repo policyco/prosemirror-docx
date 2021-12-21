@@ -10,10 +10,16 @@ import {
   TextRun,
   PageNumber,
   TableOfContents,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
 } from 'docx';
 import { Node as ProsemirrorNode } from 'prosemirror-model';
 import { IFootnotes } from './types';
 import { Options } from './serializer';
+
 export function createShortId() {
   return Math.random().toString(36).substr(2, 9);
 }
@@ -24,10 +30,94 @@ export function createDocFromState(state: {
   footnotes?: IFootnotes;
   options: Options;
 }) {
+  const titleTOC = state?.options?.title || '';
+  const subTitleTOC = state?.options?.subTitle || '';
+  let footerLeftText = '';
+  if (titleTOC && subTitleTOC) {
+    footerLeftText = `${subTitleTOC} • ${titleTOC}`;
+  } else if (titleTOC && !subTitleTOC) {
+    footerLeftText = titleTOC;
+  } else if (!titleTOC && subTitleTOC) {
+    footerLeftText = subTitleTOC;
+  }
+  const footerTable = new Table({
+    width: {
+      size: 100,
+      type: WidthType.PERCENTAGE,
+    },
+    borders: {
+      top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+      left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+      right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+      bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+    },
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            width: {
+              size: 50,
+              type: WidthType.PERCENTAGE,
+            },
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.LEFT,
+                text: footerLeftText,
+              }),
+            ],
+            columnSpan: 1,
+          }),
+          new TableCell({
+            width: {
+              size: 50,
+              type: WidthType.PERCENTAGE,
+            },
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.RIGHT,
+                children: [
+                  new TextRun({
+                    children: ['Page ', PageNumber.CURRENT, ' of ', PageNumber.TOTAL_PAGES],
+                  }),
+                ],
+              }),
+            ],
+            columnSpan: 1,
+          }),
+        ],
+      }),
+    ],
+  });
+
+  const footer = state?.options?.footer ? footerTable : new TextRun({});
+
+  const pageTitleTOC = new Paragraph({
+    children: [
+      new TextRun({
+        text: state.options.title,
+        size: 60,
+        bold: true,
+        break: 1,
+      }),
+      new TextRun({
+        text: state?.options?.subTitle || '',
+        size: 50,
+        italics: true,
+        break: 1,
+      }),
+      new TextRun({
+        text: '',
+        break: 1,
+      }),
+    ],
+  });
   const toc = new TableOfContents('Summary', {
     hyperlink: true,
   });
-  const children = [toc].concat(state.children);
+  const pageBreak = new Paragraph({
+    pageBreakBefore: true,
+  });
+  const children = [pageTitleTOC, toc, pageBreak].concat(state.children);
 
   const doc = new Document({
     footnotes: state.footnotes,
@@ -44,12 +134,7 @@ export function createDocFromState(state: {
             children: [
               new Paragraph({
                 alignment: AlignmentType.LEFT,
-                children: [
-                  new TextRun(state?.options?.footer || ''),
-                  new TextRun({
-                    children: [' Page ', PageNumber.CURRENT],
-                  }),
-                ],
+                children: [footer],
               }),
             ],
           }),
@@ -57,7 +142,7 @@ export function createDocFromState(state: {
         properties: {
           type: SectionType.CONTINUOUS,
         },
-        children: children,
+        children,
       },
     ],
   });

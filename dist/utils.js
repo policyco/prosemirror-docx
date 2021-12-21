@@ -16,11 +16,95 @@ function createShortId() {
 }
 exports.createShortId = createShortId;
 function createDocFromState(state) {
-    var _a;
+    var _a, _b, _c, _d;
+    const titleTOC = ((_a = state === null || state === void 0 ? void 0 : state.options) === null || _a === void 0 ? void 0 : _a.title) || '';
+    const subTitleTOC = ((_b = state === null || state === void 0 ? void 0 : state.options) === null || _b === void 0 ? void 0 : _b.subTitle) || '';
+    let footerLeftText = '';
+    if (titleTOC && subTitleTOC) {
+        footerLeftText = `${subTitleTOC} • ${titleTOC}`;
+    }
+    else if (titleTOC && !subTitleTOC) {
+        footerLeftText = titleTOC;
+    }
+    else if (!titleTOC && subTitleTOC) {
+        footerLeftText = subTitleTOC;
+    }
+    const footerTable = new docx_1.Table({
+        width: {
+            size: 100,
+            type: docx_1.WidthType.PERCENTAGE,
+        },
+        borders: {
+            top: { style: docx_1.BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+            left: { style: docx_1.BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+            right: { style: docx_1.BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+            bottom: { style: docx_1.BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+        },
+        rows: [
+            new docx_1.TableRow({
+                children: [
+                    new docx_1.TableCell({
+                        width: {
+                            size: 50,
+                            type: docx_1.WidthType.PERCENTAGE,
+                        },
+                        children: [
+                            new docx_1.Paragraph({
+                                alignment: docx_1.AlignmentType.LEFT,
+                                text: footerLeftText,
+                            }),
+                        ],
+                        columnSpan: 1,
+                    }),
+                    new docx_1.TableCell({
+                        width: {
+                            size: 50,
+                            type: docx_1.WidthType.PERCENTAGE,
+                        },
+                        children: [
+                            new docx_1.Paragraph({
+                                alignment: docx_1.AlignmentType.RIGHT,
+                                children: [
+                                    new docx_1.TextRun({
+                                        children: ['Page ', docx_1.PageNumber.CURRENT, ' of ', docx_1.PageNumber.TOTAL_PAGES],
+                                    }),
+                                ],
+                            }),
+                        ],
+                        columnSpan: 1,
+                    }),
+                ],
+            }),
+        ],
+    });
+    const footer = ((_c = state === null || state === void 0 ? void 0 : state.options) === null || _c === void 0 ? void 0 : _c.footer) ? footerTable : new docx_1.TextRun({});
+    const pageTitleTOC = new docx_1.Paragraph({
+        children: [
+            new docx_1.TextRun({
+                text: state.options.title,
+                size: 60,
+                bold: true,
+                break: 1,
+            }),
+            new docx_1.TextRun({
+                text: ((_d = state === null || state === void 0 ? void 0 : state.options) === null || _d === void 0 ? void 0 : _d.subTitle) || '',
+                size: 50,
+                italics: true,
+                break: 1,
+            }),
+            new docx_1.TextRun({
+                text: '',
+                break: 1,
+            }),
+        ],
+    });
     const toc = new docx_1.TableOfContents('Summary', {
         hyperlink: true,
     });
-    const children = [toc].concat(state.children);
+    const pageBreak = new docx_1.Paragraph({
+        pageBreakBefore: true,
+    });
+    const children = [pageTitleTOC, toc, pageBreak].concat(state.children);
     const doc = new docx_1.Document({
         footnotes: state.footnotes,
         numbering: {
@@ -36,12 +120,7 @@ function createDocFromState(state) {
                         children: [
                             new docx_1.Paragraph({
                                 alignment: docx_1.AlignmentType.LEFT,
-                                children: [
-                                    new docx_1.TextRun(((_a = state === null || state === void 0 ? void 0 : state.options) === null || _a === void 0 ? void 0 : _a.footer) || ''),
-                                    new docx_1.TextRun({
-                                        children: [' Page ', docx_1.PageNumber.CURRENT],
-                                    }),
-                                ],
+                                children: [footer],
                             }),
                         ],
                     }),
@@ -49,7 +128,7 @@ function createDocFromState(state) {
                 properties: {
                     type: docx_1.SectionType.CONTINUOUS,
                 },
-                children: children,
+                children,
             },
         ],
     });

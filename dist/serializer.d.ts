@@ -7,8 +7,10 @@ export declare type AlignOptions = 'left' | 'center' | 'right';
 export declare type NodeSerializer<S extends Schema = any> = Record<string, (state: DocxSerializerState<S>, node: ProsemirrorNode<S>, parent: ProsemirrorNode<S>, index: number) => void>;
 export declare type MarkSerializer<S extends Schema = any> = Record<string, (state: DocxSerializerState<S>, node: ProsemirrorNode<S>, mark: Mark<S>) => IRunOptions>;
 export declare type Options = {
-    getImageBuffer?: (src: string) => Buffer;
-    footer?: string;
+    getImageBuffer?: (src: string) => any;
+    footer?: boolean;
+    title?: string;
+    subTitle?: string;
 };
 export declare type IMathOpts = {
     inline?: boolean;

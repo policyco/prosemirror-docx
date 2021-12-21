@@ -46,8 +46,10 @@ export type MarkSerializer<S extends Schema = any> = Record<
 >;
 
 export type Options = {
-  getImageBuffer?: (src: string) => Buffer;
-  footer?: string;
+  getImageBuffer?: (src: string) => any;
+  footer?: boolean;
+  title?: string;
+  subTitle?: string;
 };
 
 export type IMathOpts = {
