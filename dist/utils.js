@@ -15,6 +15,13 @@ function createShortId() {
     return Math.random().toString(36).substr(2, 9);
 }
 exports.createShortId = createShortId;
+const footerStyleDefinition = { style: docx_1.BorderStyle.NONE, size: undefined, color: 'FFFFFF' };
+const footerBorders = {
+    top: footerStyleDefinition,
+    left: footerStyleDefinition,
+    right: footerStyleDefinition,
+    bottom: footerStyleDefinition,
+};
 function createDocFromState(state) {
     var _a, _b, _c, _d;
     const titleTOC = ((_a = state === null || state === void 0 ? void 0 : state.options) === null || _a === void 0 ? void 0 : _a.title) || '';
@@ -29,24 +36,21 @@ function createDocFromState(state) {
     else if (!titleTOC && subTitleTOC) {
         footerLeftText = subTitleTOC;
     }
+    if (state.options.internalUseText) {
+        footerLeftText += ` • ${state.options.internalUseText}`;
+    }
     const footerTable = new docx_1.Table({
         width: {
             size: 100,
             type: docx_1.WidthType.PERCENTAGE,
-        },
-        borders: {
-            top: { style: docx_1.BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-            left: { style: docx_1.BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-            right: { style: docx_1.BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-            bottom: { style: docx_1.BorderStyle.NONE, size: 0, color: 'FFFFFF' },
         },
         rows: [
             new docx_1.TableRow({
                 children: [
                     new docx_1.TableCell({
                         width: {
-                            size: 50,
-                            type: docx_1.WidthType.PERCENTAGE,
+                            size: 70,
+                            type: docx_1.WidthType.AUTO,
                         },
                         children: [
                             new docx_1.Paragraph({
@@ -55,11 +59,12 @@ function createDocFromState(state) {
                             }),
                         ],
                         columnSpan: 1,
+                        borders: footerBorders,
                     }),
                     new docx_1.TableCell({
                         width: {
-                            size: 50,
-                            type: docx_1.WidthType.PERCENTAGE,
+                            size: 30,
+                            type: docx_1.WidthType.AUTO,
                         },
                         children: [
                             new docx_1.Paragraph({
@@ -72,6 +77,7 @@ function createDocFromState(state) {
                             }),
                         ],
                         columnSpan: 1,
+                        borders: footerBorders,
                     }),
                 ],
             }),

@@ -11,6 +11,7 @@ export declare type Options = {
     footer?: boolean;
     title?: string;
     subTitle?: string;
+    internalUseText?: null | string;
 };
 export declare type IMathOpts = {
     inline?: boolean;

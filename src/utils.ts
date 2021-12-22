@@ -23,6 +23,13 @@ import { Options } from './serializer';
 export function createShortId() {
   return Math.random().toString(36).substr(2, 9);
 }
+const footerStyleDefinition = { style: BorderStyle.NONE, size: undefined, color: 'FFFFFF' };
+const footerBorders = {
+  top: footerStyleDefinition,
+  left: footerStyleDefinition,
+  right: footerStyleDefinition,
+  bottom: footerStyleDefinition,
+};
 
 export function createDocFromState(state: {
   numbering: INumberingOptions['config'];
@@ -40,24 +47,21 @@ export function createDocFromState(state: {
   } else if (!titleTOC && subTitleTOC) {
     footerLeftText = subTitleTOC;
   }
+  if (state.options.internalUseText) {
+    footerLeftText += ` • ${state.options.internalUseText}`;
+  }
   const footerTable = new Table({
     width: {
       size: 100,
       type: WidthType.PERCENTAGE,
-    },
-    borders: {
-      top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-      left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-      right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-      bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
     },
     rows: [
       new TableRow({
         children: [
           new TableCell({
             width: {
-              size: 50,
-              type: WidthType.PERCENTAGE,
+              size: 70,
+              type: WidthType.AUTO,
             },
             children: [
               new Paragraph({
@@ -66,11 +70,12 @@ export function createDocFromState(state: {
               }),
             ],
             columnSpan: 1,
+            borders: footerBorders,
           }),
           new TableCell({
             width: {
-              size: 50,
-              type: WidthType.PERCENTAGE,
+              size: 30,
+              type: WidthType.AUTO,
             },
             children: [
               new Paragraph({
@@ -83,6 +88,7 @@ export function createDocFromState(state: {
               }),
             ],
             columnSpan: 1,
+            borders: footerBorders,
           }),
         ],
       }),

@@ -50,6 +50,7 @@ export type Options = {
   footer?: boolean;
   title?: string;
   subTitle?: string;
+  internalUseText?: null | string;
 };
 
 export type IMathOpts = {
