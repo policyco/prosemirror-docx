@@ -282,6 +282,8 @@ export class DocxSerializerState<S extends Schema = any> {
   table(node: ProsemirrorNode<S>) {
     const actualChildren = this.children;
     const rows: TableRow[] = [];
+    // don't carry over any past formatting
+    delete this.nextRunOpts;
     node.content.forEach(({ content: rowContent }) => {
       const cells: TableCell[] = [];
       // Check if all cells are headers in this row

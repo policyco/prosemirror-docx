@@ -209,6 +209,8 @@ class DocxSerializerState {
     table(node) {
         const actualChildren = this.children;
         const rows = [];
+        // don't carry over any past formatting
+        delete this.nextRunOpts;
         node.content.forEach(({ content: rowContent }) => {
             const cells = [];
             // Check if all cells are headers in this row
