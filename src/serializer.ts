@@ -350,6 +350,7 @@ export class DocxSerializerState<S extends Schema = any> {
     });
     this.current = [];
     delete this.nextParentParagraphOpts;
+    delete this.nextRunOpts;
     this.children.push(paragraph);
   }
 
