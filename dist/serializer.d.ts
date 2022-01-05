@@ -38,6 +38,7 @@ export declare class DocxSerializerState<S extends Schema = any> {
     };
     constructor(nodes: NodeSerializer<S>, marks: MarkSerializer<S>, options: Options);
     renderContent(parent: ProsemirrorNode<S>, opts?: IParagraphOptions): void;
+    renderCodeBlock(parent: ProsemirrorNode<S>, opts?: IParagraphOptions): void;
     render(node: ProsemirrorNode<S>, parent: ProsemirrorNode<S>, index: number): void;
     renderMarks(node: ProsemirrorNode<S>, marks: Mark[]): IRunOptions;
     renderInline(parent: ProsemirrorNode<S>): void;

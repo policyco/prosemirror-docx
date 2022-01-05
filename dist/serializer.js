@@ -30,6 +30,22 @@ class DocxSerializerState {
             this.render(node, parent, i);
         });
     }
+    renderCodeBlock(parent, opts) {
+        parent.forEach((node, _, i) => {
+            var _a;
+            if (opts)
+                this.addParagraphOptions(opts);
+            if (((_a = node === null || node === void 0 ? void 0 : node.type) === null || _a === void 0 ? void 0 : _a.name) === 'text' && node.text) {
+                node.text.split(/\r?\n/)
+                    .map((text) => {
+                    this.current.push(new docx_1.TextRun({ text, font: 'Courier New', break: 1 }));
+                });
+            }
+            else {
+                this.render(node, parent, i);
+            }
+        });
+    }
     render(node, parent, index) {
         if (typeof parent === 'number')
             throw new Error('!');

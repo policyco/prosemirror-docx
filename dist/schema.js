@@ -31,7 +31,7 @@ exports.defaultNodes = {
     },
     code_block(state, node) {
         // TODO: something for code
-        state.renderContent(node);
+        state.renderCodeBlock(node);
         state.closeBlock(node);
     },
     horizontal_rule(state, node) {

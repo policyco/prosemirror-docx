@@ -101,6 +101,22 @@ export class DocxSerializerState<S extends Schema = any> {
     });
   }
 
+  renderCodeBlock(parent: ProsemirrorNode<S>, opts?: IParagraphOptions) {
+    parent.forEach((node, _, i) => {
+      if (opts) this.addParagraphOptions(opts);
+      if(node?.type?.name === 'text' && node.text) {
+        node.text.split(/\r?\n/)
+        .map((text) => {
+          this.current.push(
+            new TextRun({text, font: 'Courier New', break: 1})
+          );
+        });
+      } else {
+        this.render(node, parent, i);
+      }
+    });
+  }
+
   render(node: ProsemirrorNode<S>, parent: ProsemirrorNode<S>, index: number) {
     if (typeof parent === 'number') throw new Error('!');
     if (!this.nodes[node.type.name])
