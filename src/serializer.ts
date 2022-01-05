@@ -26,6 +26,7 @@ import sizeOf from 'buffer-image-size';
 import { createNumbering, NumberingStyles } from './numbering';
 import { createDocFromState, createShortId } from './utils';
 import { IFootnotes, INumbering, Mutable } from './types';
+import { cssToToDocxStyle } from './cssToDocxStyle';
 
 // This is duplicated from @curvenote/schema
 export type AlignOptions = 'left' | 'center' | 'right';
@@ -116,6 +117,7 @@ export class DocxSerializerState<S extends Schema = any> {
   }
 
   renderInline(parent: ProsemirrorNode<S>) {
+    const style = cssToToDocxStyle(parent?.attrs?.style);
     // Pop the stack over to this object when we encounter a link, and closeLink restores it
     let currentLink: { link: string; stack: ParagraphChild[] } | undefined;
     const closeLink = () => {
@@ -158,7 +160,8 @@ export class DocxSerializerState<S extends Schema = any> {
         closeLink();
       }
       if (node.isText) {
-        this.text(node.text, this.renderMarks(node, node.marks));
+        const marks = this.renderMarks(node, node.marks);
+        this.text(node.text, { ...marks, ...style });
       } else {
         this.render(node, parent, index);
       }

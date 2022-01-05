@@ -8,6 +8,7 @@ const docx_1 = require("docx");
 const buffer_image_size_1 = __importDefault(require("buffer-image-size"));
 const numbering_1 = require("./numbering");
 const utils_1 = require("./utils");
+const cssToDocxStyle_1 = require("./cssToDocxStyle");
 const MAX_IMAGE_WIDTH = 600;
 class DocxSerializerState {
     constructor(nodes, marks, options) {
@@ -45,6 +46,8 @@ class DocxSerializerState {
             .reduce((a, b) => (Object.assign(Object.assign({}, a), b)), {});
     }
     renderInline(parent) {
+        var _a;
+        const style = (0, cssToDocxStyle_1.cssToToDocxStyle)((_a = parent === null || parent === void 0 ? void 0 : parent.attrs) === null || _a === void 0 ? void 0 : _a.style);
         // Pop the stack over to this object when we encounter a link, and closeLink restores it
         let currentLink;
         const closeLink = () => {
@@ -91,7 +94,8 @@ class DocxSerializerState {
                 closeLink();
             }
             if (node.isText) {
-                this.text(node.text, this.renderMarks(node, node.marks));
+                const marks = this.renderMarks(node, node.marks);
+                this.text(node.text, Object.assign(Object.assign({}, marks), style));
             }
             else {
                 this.render(node, parent, index);
@@ -268,6 +272,7 @@ class DocxSerializerState {
         const paragraph = new docx_1.Paragraph(Object.assign(Object.assign({ children: this.current }, this.nextParentParagraphOpts), props));
         this.current = [];
         delete this.nextParentParagraphOpts;
+        delete this.nextRunOpts;
         this.children.push(paragraph);
     }
     createReference(id, before, after) {
