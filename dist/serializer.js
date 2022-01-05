@@ -4,11 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DocxSerializer = exports.DocxSerializerState = void 0;
-const docx_1 = require("docx");
 const buffer_image_size_1 = __importDefault(require("buffer-image-size"));
+const docx_1 = require("docx");
+const cssToDocxStyle_1 = require("./cssToDocxStyle");
 const numbering_1 = require("./numbering");
 const utils_1 = require("./utils");
-const cssToDocxStyle_1 = require("./cssToDocxStyle");
 const MAX_IMAGE_WIDTH = 600;
 class DocxSerializerState {
     constructor(nodes, marks, options) {
@@ -267,6 +267,26 @@ class DocxSerializerState {
         this.current = current;
         this.nextRunOpts = nextRunOpts;
         this.current.push(new docx_1.FootnoteReferenceRun(this.$footnoteCounter));
+    }
+    setStyle(node) {
+        var _a;
+        if (!((_a = node === null || node === void 0 ? void 0 : node.attrs) === null || _a === void 0 ? void 0 : _a.class)) {
+            return;
+        }
+        let alignment;
+        switch (node.attrs.class) {
+            case 'text-right':
+                alignment = docx_1.AlignmentType.RIGHT;
+                break;
+            case 'text-left':
+                alignment = docx_1.AlignmentType.LEFT;
+                break;
+            default:
+                alignment = docx_1.AlignmentType.CENTER;
+        }
+        this.addParagraphOptions({
+            alignment,
+        });
     }
     closeBlock(node, props) {
         const paragraph = new docx_1.Paragraph(Object.assign(Object.assign({ children: this.current }, this.nextParentParagraphOpts), props));

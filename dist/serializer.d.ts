@@ -1,8 +1,8 @@
 /// <reference types="node" />
-import { Node as ProsemirrorNode, Schema, Mark } from 'prosemirror-model';
-import { IParagraphOptions, IRunOptions, Paragraph, ParagraphChild, Table } from 'docx';
-import { NumberingStyles } from './numbering';
-import { IFootnotes, INumbering } from './types';
+import { IParagraphOptions, IRunOptions, Paragraph, ParagraphChild, Table } from "docx";
+import { Mark, Node as ProsemirrorNode, Schema } from "prosemirror-model";
+import { NumberingStyles } from "./numbering";
+import { IFootnotes, INumbering } from "./types";
 export declare type AlignOptions = 'left' | 'center' | 'right';
 export declare type NodeSerializer<S extends Schema = any> = Record<string, (state: DocxSerializerState<S>, node: ProsemirrorNode<S>, parent: ProsemirrorNode<S>, index: number) => void>;
 export declare type MarkSerializer<S extends Schema = any> = Record<string, (state: DocxSerializerState<S>, node: ProsemirrorNode<S>, mark: Mark<S>) => IRunOptions>;
@@ -54,6 +54,7 @@ export declare class DocxSerializerState<S extends Schema = any> {
     captionLabel(id: string, kind: 'Figure' | 'Table'): void;
     $footnoteCounter: number;
     footnote(node: ProsemirrorNode<S>): void;
+    setStyle(node: ProsemirrorNode<S>): void;
     closeBlock(node: ProsemirrorNode<S>, props?: IParagraphOptions): void;
     createReference(id: string, before?: string, after?: string): void;
 }

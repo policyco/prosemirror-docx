@@ -1,32 +1,32 @@
-import { Node as ProsemirrorNode, Schema, Mark } from 'prosemirror-model';
+import sizeOf from "buffer-image-size";
 import {
+  AlignmentType,
+  Bookmark,
+  ExternalHyperlink,
+  FootnoteReferenceRun,
+  ImageRun,
+  InternalHyperlink,
   IParagraphOptions,
   IRunOptions,
-  Paragraph,
-  TextRun,
-  ExternalHyperlink,
-  ParagraphChild,
-  MathRun,
-  Math,
-  TabStopType,
-  TabStopPosition,
-  SequentialIdentifier,
-  Bookmark,
-  ImageRun,
-  AlignmentType,
-  Table,
-  TableRow,
-  TableCell,
   ITableCellOptions,
-  InternalHyperlink,
+  Math,
+  MathRun,
+  Paragraph,
+  ParagraphChild,
+  SequentialIdentifier,
   SimpleField,
-  FootnoteReferenceRun,
-} from 'docx';
-import sizeOf from 'buffer-image-size';
-import { createNumbering, NumberingStyles } from './numbering';
-import { createDocFromState, createShortId } from './utils';
-import { IFootnotes, INumbering, Mutable } from './types';
-import { cssToToDocxStyle } from './cssToDocxStyle';
+  Table,
+  TableCell,
+  TableRow,
+  TabStopPosition,
+  TabStopType,
+  TextRun
+} from "docx";
+import { Mark, Node as ProsemirrorNode, Schema } from "prosemirror-model";
+import { cssToToDocxStyle } from "./cssToDocxStyle";
+import { createNumbering, NumberingStyles } from "./numbering";
+import { IFootnotes, INumbering, Mutable } from "./types";
+import { createDocFromState, createShortId } from "./utils";
 
 // This is duplicated from @curvenote/schema
 export type AlignOptions = 'left' | 'center' | 'right';
@@ -343,6 +343,26 @@ export class DocxSerializerState<S extends Schema = any> {
     this.current = current;
     this.nextRunOpts = nextRunOpts;
     this.current.push(new FootnoteReferenceRun(this.$footnoteCounter));
+  }
+
+  setStyle(node: ProsemirrorNode<S>) {
+    if(!node?.attrs?.class) {
+      return;
+    }
+    let alignment: AlignmentType;
+    switch (node.attrs.class) {
+      case 'text-right':
+        alignment = AlignmentType.RIGHT;
+        break;
+      case 'text-left':
+        alignment = AlignmentType.LEFT;
+        break;
+      default:
+        alignment = AlignmentType.CENTER;
+    }
+    this.addParagraphOptions({
+      alignment,
+    });
   }
 
   closeBlock(node: ProsemirrorNode<S>, props?: IParagraphOptions) {

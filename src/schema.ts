@@ -7,6 +7,7 @@ export const defaultNodes: NodeSerializer = {
     state.text(node.text ?? '');
   },
   paragraph(state, node) {
+    state.setStyle(node);
     state.renderInline(node);
     state.closeBlock(node);
   },

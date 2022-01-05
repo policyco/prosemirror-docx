@@ -10,6 +10,7 @@ exports.defaultNodes = {
         state.text((_a = node.text) !== null && _a !== void 0 ? _a : '');
     },
     paragraph(state, node) {
+        state.setStyle(node);
         state.renderInline(node);
         state.closeBlock(node);
     },
