@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -6,7 +25,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DocxSerializer = exports.DocxSerializerState = void 0;
 const buffer_image_size_1 = __importDefault(require("buffer-image-size"));
 const docx_1 = require("docx");
-const cssToDocxStyle_1 = require("./cssToDocxStyle");
+const cssToDocxStyle = __importStar(require("./cssToDocxStyle"));
 const numbering_1 = require("./numbering");
 const utils_1 = require("./utils");
 const MAX_IMAGE_WIDTH = 600;
@@ -22,28 +41,13 @@ class DocxSerializerState {
         this.options = options !== null && options !== void 0 ? options : {};
         this.children = [];
         this.numbering = [];
+        this.options.fontSize = 17;
     }
     renderContent(parent, opts) {
         parent.forEach((node, _, i) => {
             if (opts)
                 this.addParagraphOptions(opts);
             this.render(node, parent, i);
-        });
-    }
-    renderCodeBlock(parent, opts) {
-        parent.forEach((node, _, i) => {
-            var _a;
-            if (opts)
-                this.addParagraphOptions(opts);
-            if (((_a = node === null || node === void 0 ? void 0 : node.type) === null || _a === void 0 ? void 0 : _a.name) === 'text' && node.text) {
-                node.text.split(/\r?\n/)
-                    .map((text) => {
-                    this.current.push(new docx_1.TextRun({ text, font: 'Courier New', break: 1 }));
-                });
-            }
-            else {
-                this.render(node, parent, i);
-            }
         });
     }
     render(node, parent, index) {
@@ -61,9 +65,28 @@ class DocxSerializerState {
         })
             .reduce((a, b) => (Object.assign(Object.assign({}, a), b)), {});
     }
+    renderCodeBlock(parent, opts) {
+        parent.forEach((node, _, i) => {
+            var _a;
+            if (opts)
+                this.addParagraphOptions(opts);
+            if (((_a = node === null || node === void 0 ? void 0 : node.type) === null || _a === void 0 ? void 0 : _a.name) === 'text' && node.text) {
+                node.text.split(/\r?\n/)
+                    .map((text) => {
+                    this.current.push(new docx_1.TextRun({ text, font: 'Courier New', break: 1 }));
+                });
+            }
+            else {
+                this.render(node, parent, i);
+            }
+        });
+    }
     renderInline(parent) {
         var _a;
-        const style = (0, cssToDocxStyle_1.cssToToDocxStyle)((_a = parent === null || parent === void 0 ? void 0 : parent.attrs) === null || _a === void 0 ? void 0 : _a.style);
+        const style = cssToDocxStyle.convert((_a = parent === null || parent === void 0 ? void 0 : parent.attrs) === null || _a === void 0 ? void 0 : _a.style, this.options.fontSize);
+        if (style === null || style === void 0 ? void 0 : style.paragraphOptions) {
+            this.addParagraphOptions(style.paragraphOptions);
+        }
         // Pop the stack over to this object when we encounter a link, and closeLink restores it
         let currentLink;
         const closeLink = () => {
@@ -111,7 +134,7 @@ class DocxSerializerState {
             }
             if (node.isText) {
                 const marks = this.renderMarks(node, node.marks);
-                this.text(node.text, Object.assign(Object.assign({}, marks), style));
+                this.text(node.text, Object.assign(Object.assign({}, marks), style.textRunOptions));
             }
             else {
                 this.render(node, parent, index);
@@ -284,7 +307,7 @@ class DocxSerializerState {
         this.nextRunOpts = nextRunOpts;
         this.current.push(new docx_1.FootnoteReferenceRun(this.$footnoteCounter));
     }
-    setStyle(node) {
+    setParagraphAlignmentFromClass(node) {
         var _a;
         if (!((_a = node === null || node === void 0 ? void 0 : node.attrs) === null || _a === void 0 ? void 0 : _a.class)) {
             return;

@@ -19,25 +19,24 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cssToToDocxStyle = void 0;
+exports.convert = void 0;
 const cssjson = __importStar(require("cssjson"));
 const cssfontparser = __importStar(require("cssfontparser"));
 const dpi = 96.0;
+let defaultFontSize = 17;
 function numericFontSize(fontSizeStr) {
-    const parent = null;
+    if (!fontSizeStr)
+        return 0;
     const matches = fontSizeStr.match(/([\.0-9]+)(.*)/);
-    if (!matches) {
-        return;
-    }
+    if (!matches)
+        return 0;
     const sizeInt = parseFloat(matches[1]);
     const units = matches[2].toLowerCase().trim();
     const val = Math.round(sizeInt);
     switch (units) {
         case 'em':
-            if (parent === null) {
-                return;
-            }
-            return val * parent;
+        case 'rem':
+            return val * defaultFontSize;
             break;
         case 'px':
             return val;
@@ -58,15 +57,17 @@ function numericFontSize(fontSizeStr) {
             return val * dpi;
             break;
         case '%':
-            if (parent === null) {
-                return;
-            }
-            return parent * (val / 100);
+            return defaultFontSize * (val / 100);
             break;
     }
+    return 0;
 }
 function convertPxToPt(val) {
     return val * (72 / dpi);
+}
+function convertPxToTWIP(val) {
+    // TWIP = 1/1440 inch, units used in docx paragraph spacing property
+    return (val / dpi) * 1440;
 }
 function getFontSize(str) {
     if (str) {
@@ -110,8 +111,82 @@ function getFontFamily(str) {
     }
     return null;
 }
-function xlate(key, value) {
-    const ret = {};
+function getMarginBottom(str) {
+    if (str) {
+        const sizeInt = numericFontSize(str);
+        if (sizeInt) {
+            return {
+                spacing: {
+                    after: `${Math.round(convertPxToTWIP(sizeInt)).toLocaleString()}`,
+                },
+            };
+        }
+    }
+    return null;
+}
+// given a size 15px, 1em, ... convert to TWIP
+function getSizeInTWIP(str) {
+    if (str) {
+        const sizeInt = numericFontSize(str);
+        if (sizeInt) {
+            return `${Math.round(convertPxToTWIP(sizeInt)).toLocaleString()}pt`;
+        }
+    }
+    return null;
+}
+function getMargin(str) {
+    const bits = str.split(/[ ]./);
+    switch (bits.length) {
+        case 1:
+            return {
+                spacing: {
+                    before: Math.round(convertPxToTWIP(numericFontSize(bits[0]))),
+                    after: Math.round(convertPxToTWIP(numericFontSize(bits[0]))),
+                },
+                indent: {
+                    left: Math.round(convertPxToTWIP(numericFontSize(bits[0]))),
+                },
+            };
+            break;
+        case 2:
+            return {
+                spacing: {
+                    before: Math.round(convertPxToTWIP(numericFontSize(bits[0]))),
+                    after: Math.round(convertPxToTWIP(numericFontSize(bits[0]))),
+                },
+                indent: {
+                    left: Math.round(convertPxToTWIP(numericFontSize(bits[1]))),
+                },
+            };
+            break;
+        case 3:
+            return {
+                spacing: {
+                    before: Math.round(convertPxToTWIP(numericFontSize(bits[0]))),
+                    after: Math.round(convertPxToTWIP(numericFontSize(bits[2]))),
+                },
+                indent: {
+                    left: Math.round(convertPxToTWIP(numericFontSize(bits[1]))),
+                },
+            };
+            break;
+        case 4:
+            return {
+                spacing: {
+                    before: Math.round(convertPxToTWIP(numericFontSize(bits[0]))),
+                    after: Math.round(convertPxToTWIP(numericFontSize(bits[2]))),
+                },
+                indent: {
+                    left: Math.round(convertPxToTWIP(numericFontSize(bits[3]))),
+                },
+            };
+            break;
+        default:
+            return {};
+            break;
+    }
+}
+function xlateToTextRunOptions(key, value) {
     switch (key) {
         case 'text-align': // left
             break;
@@ -139,27 +214,54 @@ function xlate(key, value) {
                 return fontFamily;
             }
             break;
-        case 'margin-bottom': // 50px
-            break;
         default:
             break;
     }
     return null;
 }
-function cssToToDocxStyle(cssString) {
+function xlateToParagraphOptions(key, value) {
+    const ret = {};
+    switch (key) {
+        case 'margin-bottom': // 50px
+            return getMarginBottom(value);
+            break;
+        case 'margin': // 50px
+            return getMargin(value);
+            break;
+        default:
+            return {};
+            break;
+    }
+    return {};
+}
+function convert(cssString, fontSize) {
     const cssObj = cssjson.toJSON(cssString);
     const styleObj = cssObj === null || cssObj === void 0 ? void 0 : cssObj.attributes;
     if (!styleObj) {
         return {};
     }
-    let docxStyle = {};
-    for (const [key, value] of Object.entries(styleObj)) {
-        const retObj = xlate(key, value);
-        if (retObj && typeof retObj === 'object') {
-            docxStyle = Object.assign(Object.assign({}, docxStyle), retObj);
+    defaultFontSize = fontSize || 17;
+    let textRunOptions;
+    let allTextRunOptions = {};
+    let paragraphOptions;
+    let allParagraphOptions = {};
+    Object.entries(styleObj).map(([key, value]) => {
+        // collect text run options
+        textRunOptions = xlateToTextRunOptions(key, value);
+        if (textRunOptions && typeof textRunOptions === 'object') {
+            allTextRunOptions = Object.assign(Object.assign({}, allTextRunOptions), textRunOptions);
         }
-    }
-    return docxStyle;
+        // collect paragraph options
+        paragraphOptions = xlateToParagraphOptions(key, value);
+        if (paragraphOptions && typeof paragraphOptions === 'object') {
+            allParagraphOptions = Object.assign(Object.assign({}, allParagraphOptions), paragraphOptions);
+        }
+        return true;
+    });
+    return {
+        textRunOptions: allTextRunOptions,
+        paragraphOptions: allParagraphOptions,
+    };
 }
-exports.cssToToDocxStyle = cssToToDocxStyle;
+exports.convert = convert;
 //# sourceMappingURL=cssToDocxStyle.js.map

@@ -7,7 +7,7 @@ export const defaultNodes: NodeSerializer = {
     state.text(node.text ?? '');
   },
   paragraph(state, node) {
-    state.setStyle(node);
+    state.setParagraphAlignmentFromClass(node);
     state.renderInline(node);
     state.closeBlock(node);
   },
@@ -21,7 +21,8 @@ export const defaultNodes: NodeSerializer = {
       HeadingLevel.HEADING_5,
       HeadingLevel.HEADING_6,
     ][node.attrs.level - 1];
-    state.closeBlock(node, { heading });
+    // TODO pass margin in Header node
+    state.closeBlock(node, { heading, spacing: { before: 500, after: 500} });
   },
   blockquote(state, node) {
     state.renderContent(node, { style: 'IntenseQuote' });

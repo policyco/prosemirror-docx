@@ -22,8 +22,8 @@ import {
   TabStopType,
   TextRun
 } from "docx";
-import { Mark, Node as ProsemirrorNode, Schema } from "prosemirror-model";
-import { cssToToDocxStyle } from "./cssToDocxStyle";
+import { Fragment, Mark, Node as ProsemirrorNode, Schema } from "prosemirror-model";
+import * as cssToDocxStyle from "./cssToDocxStyle";
 import { createNumbering, NumberingStyles } from "./numbering";
 import { IFootnotes, INumbering, Mutable } from "./types";
 import { createDocFromState, createShortId } from "./utils";
@@ -47,6 +47,7 @@ export type MarkSerializer<S extends Schema = any> = Record<
 >;
 
 export type Options = {
+  fontSize?: number;
   getImageBuffer?: (src: string) => any;
   footer?: boolean;
   title?: string;
@@ -92,28 +93,14 @@ export class DocxSerializerState<S extends Schema = any> {
     this.options = options ?? {};
     this.children = [];
     this.numbering = [];
+
+    this.options.fontSize = 17;
   }
 
   renderContent(parent: ProsemirrorNode<S>, opts?: IParagraphOptions) {
     parent.forEach((node, _, i) => {
       if (opts) this.addParagraphOptions(opts);
       this.render(node, parent, i);
-    });
-  }
-
-  renderCodeBlock(parent: ProsemirrorNode<S>, opts?: IParagraphOptions) {
-    parent.forEach((node, _, i) => {
-      if (opts) this.addParagraphOptions(opts);
-      if(node?.type?.name === 'text' && node.text) {
-        node.text.split(/\r?\n/)
-        .map((text) => {
-          this.current.push(
-            new TextRun({text, font: 'Courier New', break: 1})
-          );
-        });
-      } else {
-        this.render(node, parent, i);
-      }
     });
   }
 
@@ -132,8 +119,27 @@ export class DocxSerializerState<S extends Schema = any> {
       .reduce((a, b) => ({ ...a, ...b }), {});
   }
 
+  renderCodeBlock(parent: ProsemirrorNode<S>, opts?: IParagraphOptions) {
+    parent.forEach((node, _, i) => {
+      if (opts) this.addParagraphOptions(opts);
+      if(node?.type?.name === 'text' && node.text) {
+        node.text.split(/\r?\n/)
+          .map((text) => {
+            this.current.push(
+              new TextRun({text, font: 'Courier New', break: 1})
+            );
+          });
+      } else {
+        this.render(node, parent, i);
+      }
+    });
+  }
+
   renderInline(parent: ProsemirrorNode<S>) {
-    const style = cssToToDocxStyle(parent?.attrs?.style);
+    const style = cssToDocxStyle.convert(parent?.attrs?.style, this.options.fontSize);
+    if(style?.paragraphOptions) {
+      this.addParagraphOptions(style.paragraphOptions);
+    }
     // Pop the stack over to this object when we encounter a link, and closeLink restores it
     let currentLink: { link: string; stack: ParagraphChild[] } | undefined;
     const closeLink = () => {
@@ -177,7 +183,7 @@ export class DocxSerializerState<S extends Schema = any> {
       }
       if (node.isText) {
         const marks = this.renderMarks(node, node.marks);
-        this.text(node.text, { ...marks, ...style });
+        this.text(node.text, { ...marks, ...style.textRunOptions });
       } else {
         this.render(node, parent, index);
       }
@@ -361,7 +367,7 @@ export class DocxSerializerState<S extends Schema = any> {
     this.current.push(new FootnoteReferenceRun(this.$footnoteCounter));
   }
 
-  setStyle(node: ProsemirrorNode<S>) {
+  setParagraphAlignmentFromClass(node: ProsemirrorNode<S>) {
     if(!node?.attrs?.class) {
       return;
     }

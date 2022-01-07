@@ -7,6 +7,7 @@ export declare type AlignOptions = 'left' | 'center' | 'right';
 export declare type NodeSerializer<S extends Schema = any> = Record<string, (state: DocxSerializerState<S>, node: ProsemirrorNode<S>, parent: ProsemirrorNode<S>, index: number) => void>;
 export declare type MarkSerializer<S extends Schema = any> = Record<string, (state: DocxSerializerState<S>, node: ProsemirrorNode<S>, mark: Mark<S>) => IRunOptions>;
 export declare type Options = {
+    fontSize?: number;
     getImageBuffer?: (src: string) => any;
     footer?: boolean;
     title?: string;
@@ -38,9 +39,9 @@ export declare class DocxSerializerState<S extends Schema = any> {
     };
     constructor(nodes: NodeSerializer<S>, marks: MarkSerializer<S>, options: Options);
     renderContent(parent: ProsemirrorNode<S>, opts?: IParagraphOptions): void;
-    renderCodeBlock(parent: ProsemirrorNode<S>, opts?: IParagraphOptions): void;
     render(node: ProsemirrorNode<S>, parent: ProsemirrorNode<S>, index: number): void;
     renderMarks(node: ProsemirrorNode<S>, marks: Mark[]): IRunOptions;
+    renderCodeBlock(parent: ProsemirrorNode<S>, opts?: IParagraphOptions): void;
     renderInline(parent: ProsemirrorNode<S>): void;
     renderList(node: ProsemirrorNode<S>, style: NumberingStyles): void;
     renderListItem(node: ProsemirrorNode<S>): void;
@@ -55,7 +56,7 @@ export declare class DocxSerializerState<S extends Schema = any> {
     captionLabel(id: string, kind: 'Figure' | 'Table'): void;
     $footnoteCounter: number;
     footnote(node: ProsemirrorNode<S>): void;
-    setStyle(node: ProsemirrorNode<S>): void;
+    setParagraphAlignmentFromClass(node: ProsemirrorNode<S>): void;
     closeBlock(node: ProsemirrorNode<S>, props?: IParagraphOptions): void;
     createReference(id: string, before?: string, after?: string): void;
 }

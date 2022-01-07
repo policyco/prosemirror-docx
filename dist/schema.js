@@ -10,7 +10,7 @@ exports.defaultNodes = {
         state.text((_a = node.text) !== null && _a !== void 0 ? _a : '');
     },
     paragraph(state, node) {
-        state.setStyle(node);
+        state.setParagraphAlignmentFromClass(node);
         state.renderInline(node);
         state.closeBlock(node);
     },
@@ -24,13 +24,13 @@ exports.defaultNodes = {
             docx_1.HeadingLevel.HEADING_5,
             docx_1.HeadingLevel.HEADING_6,
         ][node.attrs.level - 1];
-        state.closeBlock(node, { heading });
+        // TODO pass margin in Header node
+        state.closeBlock(node, { heading, spacing: { before: 500, after: 500 } });
     },
     blockquote(state, node) {
         state.renderContent(node, { style: 'IntenseQuote' });
     },
     code_block(state, node) {
-        // TODO: something for code
         state.renderCodeBlock(node);
         state.closeBlock(node);
     },
