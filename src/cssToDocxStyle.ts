@@ -257,7 +257,7 @@ export function convert(cssString: string, fontSize: number | undefined, nodeCla
   if (!styleObj) {
     return {};
   }
-  defaultFontSize = fontSize || 17;
+  defaultFontSize = fontSize || defaultFontSize;
 
   let textRunOptions;
   let allTextRunOptions = {};

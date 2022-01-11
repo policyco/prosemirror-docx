@@ -254,7 +254,7 @@ function convert(cssString, fontSize, nodeClass) {
     if (!styleObj) {
         return {};
     }
-    defaultFontSize = fontSize || 17;
+    defaultFontSize = fontSize || defaultFontSize;
     let textRunOptions;
     let allTextRunOptions = {};
     let paragraphOptions;
