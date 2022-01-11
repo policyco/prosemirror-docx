@@ -24,8 +24,6 @@ exports.defaultNodes = {
             docx_1.HeadingLevel.HEADING_5,
             docx_1.HeadingLevel.HEADING_6,
         ][node.attrs.level - 1];
-        // TODO pass margin in Header node
-        //state.closeBlock(node, { heading, spacing: { before: 500, after: 500} });
         state.closeBlock(node, { heading });
     },
     blockquote(state, node) {
