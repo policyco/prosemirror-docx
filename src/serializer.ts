@@ -136,7 +136,7 @@ export class DocxSerializerState<S extends Schema = any> {
   }
 
   renderInline(parent: ProsemirrorNode<S>) {
-    const style = cssToDocxStyle.convert(parent?.attrs?.style, this.options.fontSize);
+    const style = cssToDocxStyle.convert(parent?.attrs?.style, this.options.fontSize, parent?.attrs?.class);
     if(style?.paragraphOptions) {
       this.addParagraphOptions(style.paragraphOptions);
     }
@@ -226,8 +226,41 @@ export class DocxSerializerState<S extends Schema = any> {
     this.nextRunOpts = { ...this.nextRunOpts, ...opts };
   }
 
+  setParagraphDefaults() {
+    let alignmentSet = false;
+
+    Object.keys(this.nextParentParagraphOpts || {}).map(v => {
+      if(v === 'alignment') {
+        alignmentSet = true;
+      }
+    });
+
+    if(!alignmentSet) {
+      this.addParagraphOptions({
+        alignment: AlignmentType.LEFT,
+      });
+    }
+  }
+
+  setTextDefault(opts ?: IRunOptions) {
+    let sizeSet = false;
+    const allOpts = {...this.nextRunOpts, ...opts} || {};
+    Object.keys(allOpts).map(v => {
+      if(v === 'size') {
+        sizeSet = true;
+      }
+    });
+
+    if(!sizeSet) {
+      // 17px is about 25 half points
+      this.addRunOptions({size: 32});
+    }
+  }
+
   text(text: string | null | undefined, opts?: IRunOptions) {
     if (!text) return;
+    this.setTextDefault(opts);
+
     this.current.push(new TextRun({ text, ...this.nextRunOpts, ...opts }));
     delete this.nextRunOpts;
   }
@@ -380,7 +413,7 @@ export class DocxSerializerState<S extends Schema = any> {
         alignment = AlignmentType.LEFT;
         break;
       default:
-        alignment = AlignmentType.CENTER;
+        alignment = AlignmentType.LEFT;
     }
     this.addParagraphOptions({
       alignment,
@@ -388,6 +421,7 @@ export class DocxSerializerState<S extends Schema = any> {
   }
 
   closeBlock(node: ProsemirrorNode<S>, props?: IParagraphOptions) {
+    this.setParagraphDefaults();
     const paragraph = new Paragraph({
       children: this.current,
       ...this.nextParentParagraphOpts,

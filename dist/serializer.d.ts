@@ -47,6 +47,8 @@ export declare class DocxSerializerState<S extends Schema = any> {
     renderListItem(node: ProsemirrorNode<S>): void;
     addParagraphOptions(opts: IParagraphOptions): void;
     addRunOptions(opts: IRunOptions): void;
+    setParagraphDefaults(): void;
+    setTextDefault(opts?: IRunOptions): void;
     text(text: string | null | undefined, opts?: IRunOptions): void;
     math(latex: string, opts?: IMathOpts): void;
     defaultGetImageBuffer(src: string): Buffer;

@@ -234,7 +234,21 @@ function xlateToParagraphOptions(key, value) {
     }
     return {};
 }
-function convert(cssString, fontSize) {
+function getDefaultOptionsForClass(nodeClass) {
+    const margin = 30;
+    switch (nodeClass) {
+        case 'control-header':
+            return {
+                spacing: {
+                    after: `${Math.round(convertPxToTWIP(margin)).toLocaleString()}`,
+                    before: `${Math.round(convertPxToTWIP(margin)).toLocaleString()}`,
+                },
+            };
+        default:
+            return null;
+    }
+}
+function convert(cssString, fontSize, nodeClass) {
     const cssObj = cssjson.toJSON(cssString);
     const styleObj = cssObj === null || cssObj === void 0 ? void 0 : cssObj.attributes;
     if (!styleObj) {
@@ -255,6 +269,12 @@ function convert(cssString, fontSize) {
         paragraphOptions = xlateToParagraphOptions(key, value);
         if (paragraphOptions && typeof paragraphOptions === 'object') {
             allParagraphOptions = Object.assign(Object.assign({}, allParagraphOptions), paragraphOptions);
+        }
+        else if (nodeClass) {
+            const defaultClassOptions = getDefaultOptionsForClass(nodeClass);
+            if (defaultClassOptions) {
+                allParagraphOptions = Object.assign(Object.assign({}, allParagraphOptions), defaultClassOptions);
+            }
         }
         return true;
     });

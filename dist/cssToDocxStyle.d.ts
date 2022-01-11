@@ -1,4 +1,4 @@
-export declare function convert(cssString: string, fontSize: number | undefined): {
+export declare function convert(cssString: string, fontSize: number | undefined, nodeClass: string | null): {
     textRunOptions?: undefined;
     paragraphOptions?: undefined;
 } | {

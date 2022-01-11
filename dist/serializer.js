@@ -82,8 +82,8 @@ class DocxSerializerState {
         });
     }
     renderInline(parent) {
-        var _a;
-        const style = cssToDocxStyle.convert((_a = parent === null || parent === void 0 ? void 0 : parent.attrs) === null || _a === void 0 ? void 0 : _a.style, this.options.fontSize);
+        var _a, _b;
+        const style = cssToDocxStyle.convert((_a = parent === null || parent === void 0 ? void 0 : parent.attrs) === null || _a === void 0 ? void 0 : _a.style, this.options.fontSize, (_b = parent === null || parent === void 0 ? void 0 : parent.attrs) === null || _b === void 0 ? void 0 : _b.class);
         if (style === null || style === void 0 ? void 0 : style.paragraphOptions) {
             this.addParagraphOptions(style.paragraphOptions);
         }
@@ -176,9 +176,36 @@ class DocxSerializerState {
     addRunOptions(opts) {
         this.nextRunOpts = Object.assign(Object.assign({}, this.nextRunOpts), opts);
     }
+    setParagraphDefaults() {
+        let alignmentSet = false;
+        Object.keys(this.nextParentParagraphOpts || {}).map(v => {
+            if (v === 'alignment') {
+                alignmentSet = true;
+            }
+        });
+        if (!alignmentSet) {
+            this.addParagraphOptions({
+                alignment: docx_1.AlignmentType.LEFT,
+            });
+        }
+    }
+    setTextDefault(opts) {
+        let sizeSet = false;
+        const allOpts = Object.assign(Object.assign({}, this.nextRunOpts), opts) || {};
+        Object.keys(allOpts).map(v => {
+            if (v === 'size') {
+                sizeSet = true;
+            }
+        });
+        if (!sizeSet) {
+            // 17px is about 25 half points
+            this.addRunOptions({ size: 32 });
+        }
+    }
     text(text, opts) {
         if (!text)
             return;
+        this.setTextDefault(opts);
         this.current.push(new docx_1.TextRun(Object.assign(Object.assign({ text }, this.nextRunOpts), opts)));
         delete this.nextRunOpts;
     }
@@ -321,13 +348,14 @@ class DocxSerializerState {
                 alignment = docx_1.AlignmentType.LEFT;
                 break;
             default:
-                alignment = docx_1.AlignmentType.CENTER;
+                alignment = docx_1.AlignmentType.LEFT;
         }
         this.addParagraphOptions({
             alignment,
         });
     }
     closeBlock(node, props) {
+        this.setParagraphDefaults();
         const paragraph = new docx_1.Paragraph(Object.assign(Object.assign({ children: this.current }, this.nextParentParagraphOpts), props));
         this.current = [];
         delete this.nextParentParagraphOpts;

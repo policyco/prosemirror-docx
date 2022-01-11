@@ -236,7 +236,22 @@ function xlateToParagraphOptions(key: string, value: string) {
   return {};
 }
 
-export function convert(cssString: string, fontSize: number | undefined) {
+function getDefaultOptionsForClass(nodeClass: string) {
+  const margin = 30;
+  switch (nodeClass) {
+    case 'control-header':
+      return {
+        spacing: {
+          after: `${Math.round(convertPxToTWIP(margin)).toLocaleString()}`,
+          before: `${Math.round(convertPxToTWIP(margin)).toLocaleString()}`,
+        },
+      };
+    default:
+      return null;
+  }
+}
+
+export function convert(cssString: string, fontSize: number | undefined, nodeClass: string | null) {
   const cssObj = cssjson.toJSON(cssString);
   const styleObj = cssObj?.attributes;
   if (!styleObj) {
@@ -259,6 +274,11 @@ export function convert(cssString: string, fontSize: number | undefined) {
     paragraphOptions = xlateToParagraphOptions(key, value as string);
     if (paragraphOptions && typeof paragraphOptions === 'object') {
       allParagraphOptions = { ...allParagraphOptions, ...paragraphOptions };
+    } else if (nodeClass) {
+      const defaultClassOptions = getDefaultOptionsForClass(nodeClass);
+      if(defaultClassOptions) {
+        allParagraphOptions = { ...allParagraphOptions, ...defaultClassOptions };
+      }
     }
     return true;
   });
