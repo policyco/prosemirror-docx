@@ -347,6 +347,9 @@ class DocxSerializerState {
             case 'text-left':
                 alignment = docx_1.AlignmentType.LEFT;
                 break;
+            case 'text-center':
+                alignment = docx_1.AlignmentType.CENTER;
+                break;
             default:
                 alignment = docx_1.AlignmentType.LEFT;
         }

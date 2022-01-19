@@ -412,6 +412,9 @@ export class DocxSerializerState<S extends Schema = any> {
       case 'text-left':
         alignment = AlignmentType.LEFT;
         break;
+      case 'text-center':
+        alignment = AlignmentType.CENTER;
+        break;
       default:
         alignment = AlignmentType.LEFT;
     }
