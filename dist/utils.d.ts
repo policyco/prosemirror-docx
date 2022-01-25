@@ -1,8 +1,8 @@
 /// <reference types="node" />
 import { Document, INumberingOptions, ISectionOptions } from 'docx';
 import { Node as ProsemirrorNode } from 'prosemirror-model';
-import { IFootnotes } from './types';
 import { Options } from './serializer';
+import { IFootnotes } from './types';
 export declare function createShortId(): string;
 export declare function createDocFromState(state: {
     numbering: INumberingOptions['config'];

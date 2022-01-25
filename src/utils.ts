@@ -1,24 +1,28 @@
 import {
+  AlignmentType,
+  BorderStyle,
   Document,
+  Footer,
+  ImageRun,
   INumberingOptions,
   ISectionOptions,
   Packer,
-  SectionType,
-  Footer,
-  Paragraph,
-  AlignmentType,
-  TextRun,
+  PageBreak,
   PageNumber,
-  TableOfContents,
+  Paragraph,
+  SectionType,
   Table,
-  TableRow,
   TableCell,
+  TableOfContents,
+  TableRow,
+  TextRun,
+  TextWrappingSide,
+  TextWrappingType,
   WidthType,
-  BorderStyle,
 } from 'docx';
 import { Node as ProsemirrorNode } from 'prosemirror-model';
-import { IFootnotes } from './types';
 import { Options } from './serializer';
+import { IFootnotes } from './types';
 
 export function createShortId() {
   return Math.random().toString(36).substr(2, 9);
@@ -37,6 +41,8 @@ export function createDocFromState(state: {
   footnotes?: IFootnotes;
   options: Options;
 }) {
+  const logoBuffer =
+    typeof state?.options?.getLogoBuffer === 'function' ? state.options.getLogoBuffer() : null;
   const titleTOC = state?.options?.title || '';
   const subTitleTOC = state?.options?.subTitle || '';
   let footerLeftText = '';
@@ -97,25 +103,60 @@ export function createDocFromState(state: {
 
   const footer = state?.options?.footer ? footerTable : new TextRun({});
 
+  // One inch equates to 914400 EMUs
+  function positionFromInches(inches: number): number {
+    return Math.round(inches * 914400);
+  }
+
+  const titlePageChildren = [];
+
+  titlePageChildren.push(
+    new TextRun({
+      text: state.options.title,
+      size: 60,
+      bold: true,
+      break: 1,
+    }),
+  );
+  if (logoBuffer) {
+    titlePageChildren.push(
+      new ImageRun({
+        data: logoBuffer,
+        transformation: {
+          height: 30,
+          width: 30,
+        },
+        floating: {
+          horizontalPosition: {
+            offset: positionFromInches(1.0),
+          },
+          verticalPosition: {
+            offset: positionFromInches(2.0),
+          },
+          wrap: {
+            type: TextWrappingType.SQUARE,
+            side: TextWrappingSide.RIGHT,
+          },
+          margins: {
+            right: positionFromInches(1 / 8),
+          },
+        },
+      }),
+    );
+  }
+  titlePageChildren.push(
+    new TextRun({
+      text: state?.options?.subTitle || '',
+      size: 50,
+      italics: true,
+      break: 1,
+    }),
+  );
+
+  titlePageChildren.push(new PageBreak());
+
   const pageTitleTOC = new Paragraph({
-    children: [
-      new TextRun({
-        text: state.options.title,
-        size: 60,
-        bold: true,
-        break: 1,
-      }),
-      new TextRun({
-        text: state?.options?.subTitle || '',
-        size: 50,
-        italics: true,
-        break: 1,
-      }),
-      new TextRun({
-        text: '',
-        break: 1,
-      }),
-    ],
+    children: titlePageChildren,
   });
   const toc = new TableOfContents('Summary', {
     hyperlink: true,

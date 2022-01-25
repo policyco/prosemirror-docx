@@ -9,6 +9,7 @@ export declare type MarkSerializer<S extends Schema = any> = Record<string, (sta
 export declare type Options = {
     fontSize?: number;
     getImageBuffer?: (src: string) => any;
+    getLogoBuffer?: () => any;
     footer?: boolean;
     title?: string;
     subTitle?: string;

@@ -23,9 +23,10 @@ const footerBorders = {
     bottom: footerStyleDefinition,
 };
 function createDocFromState(state) {
-    var _a, _b, _c, _d;
-    const titleTOC = ((_a = state === null || state === void 0 ? void 0 : state.options) === null || _a === void 0 ? void 0 : _a.title) || '';
-    const subTitleTOC = ((_b = state === null || state === void 0 ? void 0 : state.options) === null || _b === void 0 ? void 0 : _b.subTitle) || '';
+    var _a, _b, _c, _d, _e;
+    const logoBuffer = typeof ((_a = state === null || state === void 0 ? void 0 : state.options) === null || _a === void 0 ? void 0 : _a.getLogoBuffer) === 'function' ? state.options.getLogoBuffer() : null;
+    const titleTOC = ((_b = state === null || state === void 0 ? void 0 : state.options) === null || _b === void 0 ? void 0 : _b.title) || '';
+    const subTitleTOC = ((_c = state === null || state === void 0 ? void 0 : state.options) === null || _c === void 0 ? void 0 : _c.subTitle) || '';
     let footerLeftText = '';
     if (titleTOC && subTitleTOC) {
         footerLeftText = `${subTitleTOC} • ${titleTOC}`;
@@ -83,26 +84,51 @@ function createDocFromState(state) {
             }),
         ],
     });
-    const footer = ((_c = state === null || state === void 0 ? void 0 : state.options) === null || _c === void 0 ? void 0 : _c.footer) ? footerTable : new docx_1.TextRun({});
+    const footer = ((_d = state === null || state === void 0 ? void 0 : state.options) === null || _d === void 0 ? void 0 : _d.footer) ? footerTable : new docx_1.TextRun({});
+    // One inch equates to 914400 EMUs
+    function positionFromInches(inches) {
+        return Math.round(inches * 914400);
+    }
+    const titlePageChildren = [];
+    titlePageChildren.push(new docx_1.TextRun({
+        text: state.options.title,
+        size: 60,
+        bold: true,
+        break: 1,
+    }));
+    if (logoBuffer) {
+        titlePageChildren.push(new docx_1.ImageRun({
+            data: logoBuffer,
+            transformation: {
+                height: 30,
+                width: 30,
+            },
+            floating: {
+                horizontalPosition: {
+                    offset: positionFromInches(1.0),
+                },
+                verticalPosition: {
+                    offset: positionFromInches(2.0),
+                },
+                wrap: {
+                    type: docx_1.TextWrappingType.SQUARE,
+                    side: docx_1.TextWrappingSide.RIGHT,
+                },
+                margins: {
+                    right: positionFromInches(1 / 8),
+                },
+            },
+        }));
+    }
+    titlePageChildren.push(new docx_1.TextRun({
+        text: ((_e = state === null || state === void 0 ? void 0 : state.options) === null || _e === void 0 ? void 0 : _e.subTitle) || '',
+        size: 50,
+        italics: true,
+        break: 1,
+    }));
+    titlePageChildren.push(new docx_1.PageBreak());
     const pageTitleTOC = new docx_1.Paragraph({
-        children: [
-            new docx_1.TextRun({
-                text: state.options.title,
-                size: 60,
-                bold: true,
-                break: 1,
-            }),
-            new docx_1.TextRun({
-                text: ((_d = state === null || state === void 0 ? void 0 : state.options) === null || _d === void 0 ? void 0 : _d.subTitle) || '',
-                size: 50,
-                italics: true,
-                break: 1,
-            }),
-            new docx_1.TextRun({
-                text: '',
-                break: 1,
-            }),
-        ],
+        children: titlePageChildren,
     });
     const toc = new docx_1.TableOfContents('Summary', {
         hyperlink: true,

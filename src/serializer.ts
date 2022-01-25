@@ -49,6 +49,7 @@ export type MarkSerializer<S extends Schema = any> = Record<
 export type Options = {
   fontSize?: number;
   getImageBuffer?: (src: string) => any;
+  getLogoBuffer?: () => any;
   footer?: boolean;
   title?: string;
   subTitle?: string;
