@@ -1,31 +1,32 @@
-import { Node as ProsemirrorNode, Schema, Mark } from 'prosemirror-model';
+import sizeOf from "buffer-image-size";
 import {
+  AlignmentType,
+  Bookmark,
+  ExternalHyperlink,
+  FootnoteReferenceRun,
+  ImageRun,
+  InternalHyperlink,
   IParagraphOptions,
   IRunOptions,
-  Paragraph,
-  TextRun,
-  ExternalHyperlink,
-  ParagraphChild,
-  MathRun,
-  Math,
-  TabStopType,
-  TabStopPosition,
-  SequentialIdentifier,
-  Bookmark,
-  ImageRun,
-  AlignmentType,
-  Table,
-  TableRow,
-  TableCell,
   ITableCellOptions,
-  InternalHyperlink,
+  Math,
+  MathRun,
+  Paragraph,
+  ParagraphChild,
+  SequentialIdentifier,
   SimpleField,
-  FootnoteReferenceRun,
-} from 'docx';
-import sizeOf from 'buffer-image-size';
-import { createNumbering, NumberingStyles } from './numbering';
-import { createDocFromState, createShortId } from './utils';
-import { IFootnotes, INumbering, Mutable } from './types';
+  Table,
+  TableCell,
+  TableRow,
+  TabStopPosition,
+  TabStopType,
+  TextRun
+} from "docx";
+import { Fragment, Mark, Node as ProsemirrorNode, Schema } from "prosemirror-model";
+import * as cssToDocxStyle from "./cssToDocxStyle";
+import { createNumbering, NumberingStyles } from "./numbering";
+import { IFootnotes, INumbering, Mutable } from "./types";
+import { createDocFromState, createShortId } from "./utils";
 
 // This is duplicated from @curvenote/schema
 export type AlignOptions = 'left' | 'center' | 'right';
@@ -46,8 +47,13 @@ export type MarkSerializer<S extends Schema = any> = Record<
 >;
 
 export type Options = {
-  getImageBuffer?: (src: string) => Buffer;
-  footer?: string;
+  fontSize?: number;
+  getImageBuffer?: (src: string) => any;
+  getLogoBuffer?: () => any;
+  footer?: boolean;
+  title?: string;
+  subTitle?: string;
+  internalUseText?: null | string;
 };
 
 export type IMathOpts = {
@@ -88,6 +94,8 @@ export class DocxSerializerState<S extends Schema = any> {
     this.options = options ?? {};
     this.children = [];
     this.numbering = [];
+
+    this.options.fontSize = 17;
   }
 
   renderContent(parent: ProsemirrorNode<S>, opts?: IParagraphOptions) {
@@ -112,7 +120,27 @@ export class DocxSerializerState<S extends Schema = any> {
       .reduce((a, b) => ({ ...a, ...b }), {});
   }
 
+  renderCodeBlock(parent: ProsemirrorNode<S>, opts?: IParagraphOptions) {
+    parent.forEach((node, _, i) => {
+      if (opts) this.addParagraphOptions(opts);
+      if(node?.type?.name === 'text' && node.text) {
+        node.text.split(/\r?\n/)
+          .map((text) => {
+            this.current.push(
+              new TextRun({text, font: 'Courier New', break: 1})
+            );
+          });
+      } else {
+        this.render(node, parent, i);
+      }
+    });
+  }
+
   renderInline(parent: ProsemirrorNode<S>) {
+    const style = cssToDocxStyle.convert(parent?.attrs?.style, this.options.fontSize, parent?.attrs?.class);
+    if(style?.paragraphOptions) {
+      this.addParagraphOptions(style.paragraphOptions);
+    }
     // Pop the stack over to this object when we encounter a link, and closeLink restores it
     let currentLink: { link: string; stack: ParagraphChild[] } | undefined;
     const closeLink = () => {
@@ -155,7 +183,8 @@ export class DocxSerializerState<S extends Schema = any> {
         closeLink();
       }
       if (node.isText) {
-        this.text(node.text, this.renderMarks(node, node.marks));
+        const marks = this.renderMarks(node, node.marks);
+        this.text(node.text, { ...marks, ...style.textRunOptions });
       } else {
         this.render(node, parent, index);
       }
@@ -198,8 +227,41 @@ export class DocxSerializerState<S extends Schema = any> {
     this.nextRunOpts = { ...this.nextRunOpts, ...opts };
   }
 
+  setParagraphDefaults() {
+    let alignmentSet = false;
+
+    Object.keys(this.nextParentParagraphOpts || {}).map(v => {
+      if(v === 'alignment') {
+        alignmentSet = true;
+      }
+    });
+
+    if(!alignmentSet) {
+      this.addParagraphOptions({
+        alignment: AlignmentType.LEFT,
+      });
+    }
+  }
+
+  setTextDefault(opts ?: IRunOptions) {
+    let sizeSet = false;
+    const allOpts = {...this.nextRunOpts, ...opts} || {};
+    Object.keys(allOpts).map(v => {
+      if(v === 'size') {
+        sizeSet = true;
+      }
+    });
+
+    if(!sizeSet) {
+      // 17px is about 25 half points
+      this.addRunOptions({size: 32});
+    }
+  }
+
   text(text: string | null | undefined, opts?: IRunOptions) {
     if (!text) return;
+    this.setTextDefault(opts);
+
     this.current.push(new TextRun({ text, ...this.nextRunOpts, ...opts }));
     delete this.nextRunOpts;
   }
@@ -244,7 +306,7 @@ export class DocxSerializerState<S extends Schema = any> {
 
   image(src: string, widthPercent = 70, align: AlignOptions = 'center') {
     let getImageBuffer = this.defaultGetImageBuffer;
-    if(typeof this?.options?.getImageBuffer === 'function') {
+    if (typeof this?.options?.getImageBuffer === 'function') {
       getImageBuffer = this.options.getImageBuffer;
     }
     const buffer = getImageBuffer(src);
@@ -279,6 +341,8 @@ export class DocxSerializerState<S extends Schema = any> {
   table(node: ProsemirrorNode<S>) {
     const actualChildren = this.children;
     const rows: TableRow[] = [];
+    // don't carry over any past formatting
+    delete this.nextRunOpts;
     node.content.forEach(({ content: rowContent }) => {
       const cells: TableCell[] = [];
       // Check if all cells are headers in this row
@@ -337,7 +401,31 @@ export class DocxSerializerState<S extends Schema = any> {
     this.current.push(new FootnoteReferenceRun(this.$footnoteCounter));
   }
 
+  setParagraphAlignmentFromClass(node: ProsemirrorNode<S>) {
+    if(!node?.attrs?.class) {
+      return;
+    }
+    let alignment: AlignmentType;
+    switch (node.attrs.class) {
+      case 'text-right':
+        alignment = AlignmentType.RIGHT;
+        break;
+      case 'text-left':
+        alignment = AlignmentType.LEFT;
+        break;
+      case 'text-center':
+        alignment = AlignmentType.CENTER;
+        break;
+      default:
+        alignment = AlignmentType.LEFT;
+    }
+    this.addParagraphOptions({
+      alignment,
+    });
+  }
+
   closeBlock(node: ProsemirrorNode<S>, props?: IParagraphOptions) {
+    this.setParagraphDefaults();
     const paragraph = new Paragraph({
       children: this.current,
       ...this.nextParentParagraphOpts,
@@ -345,6 +433,7 @@ export class DocxSerializerState<S extends Schema = any> {
     });
     this.current = [];
     delete this.nextParentParagraphOpts;
+    delete this.nextRunOpts;
     this.children.push(paragraph);
   }
 

@@ -7,6 +7,7 @@ export const defaultNodes: NodeSerializer = {
     state.text(node.text ?? '');
   },
   paragraph(state, node) {
+    state.setParagraphAlignmentFromClass(node);
     state.renderInline(node);
     state.closeBlock(node);
   },
@@ -26,8 +27,7 @@ export const defaultNodes: NodeSerializer = {
     state.renderContent(node, { style: 'IntenseQuote' });
   },
   code_block(state, node) {
-    // TODO: something for code
-    state.renderContent(node);
+    state.renderCodeBlock(node);
     state.closeBlock(node);
   },
   horizontal_rule(state, node) {
