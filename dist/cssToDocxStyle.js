@@ -22,6 +22,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.convert = void 0;
 const cssjson = __importStar(require("cssjson"));
 const cssfontparser = __importStar(require("cssfontparser"));
+const docx_1 = require("docx");
 const dpi = 96.0;
 let defaultFontSize = 17;
 function numericFontSize(fontSizeStr) {
@@ -186,6 +187,26 @@ function getMargin(str) {
             break;
     }
 }
+function getParagraphAlignment(value) {
+    switch (value) {
+        case 'left':
+            return {
+                alignment: docx_1.AlignmentType.LEFT,
+            };
+        case 'center':
+            return {
+                alignment: docx_1.AlignmentType.CENTER,
+            };
+        case 'right':
+            return {
+                alignment: docx_1.AlignmentType.RIGHT,
+            };
+        default:
+            return {
+                alignment: docx_1.AlignmentType.LEFT,
+            };
+    }
+}
 function xlateToTextRunOptions(key, value) {
     switch (key) {
         case 'text-align': // left
@@ -214,6 +235,20 @@ function xlateToTextRunOptions(key, value) {
                 return fontFamily;
             }
             break;
+        case 'font-style':
+            return {
+                italics: true,
+            };
+            break;
+        case 'text-decoration':
+            if (value === 'underline') {
+                return {
+                    underline: {
+                        type: docx_1.UnderlineType.SINGLE,
+                    }
+                };
+            }
+            break;
         default:
             break;
     }
@@ -228,6 +263,8 @@ function xlateToParagraphOptions(key, value) {
         case 'margin': // 50px
             return getMargin(value);
             break;
+        case 'text-align':
+            return getParagraphAlignment(value);
         default:
             return {};
             break;

@@ -1,5 +1,6 @@
 import * as cssjson from 'cssjson';
 import * as cssfontparser from 'cssfontparser';
+import { AlignmentType, UnderlineType } from "docx";
 
 const dpi = 96.0;
 let defaultFontSize = 17;
@@ -186,6 +187,27 @@ function getMargin(str: string) {
   }
 }
 
+function getParagraphAlignment(value: string) {
+  switch (value) {
+    case 'left':
+      return {
+        alignment: AlignmentType.LEFT,
+      };
+    case 'center':
+      return {
+        alignment: AlignmentType.CENTER,
+      };
+    case 'right':
+      return {
+        alignment: AlignmentType.RIGHT,
+      };
+    default:
+    return {
+        alignment: AlignmentType.LEFT,
+      };
+  }
+}
+
 function xlateToTextRunOptions(key: string, value: string) {
   switch (key) {
     case 'text-align': // left
@@ -214,6 +236,20 @@ function xlateToTextRunOptions(key: string, value: string) {
         return fontFamily;
       }
       break;
+    case 'font-style':
+      return {
+        italics: true,
+      };
+      break;
+    case 'text-decoration':
+      if(value === 'underline') {
+        return {
+          underline: {
+            type: UnderlineType.SINGLE,
+          }
+        };
+      }
+      break;
     default:
       break;
   }
@@ -229,6 +265,8 @@ function xlateToParagraphOptions(key: string, value: string) {
     case 'margin': // 50px
       return getMargin(value);
       break;
+    case 'text-align':
+      return getParagraphAlignment(value);
     default:
       return {};
       break;
